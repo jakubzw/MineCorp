@@ -1,0 +1,7 @@
+[gd_scene load_steps=2 format=3 uid="uid://bujcaxs8w2yip"]
+
+[ext_resource type="PackedScene" uid="uid://b8wb8l5s1m8kr" path="res://scenes/ui/grid_cursor.tscn" id="1_u1xfj"]
+
+[node name="Main" type="Node3D"]
+
+[node name="GridCursor" parent="." instance=ExtResource("1_u1xfj")]

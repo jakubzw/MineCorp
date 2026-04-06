@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BuildingData" load_steps=3 format=3 uid="uid://4ee03ha4tf7j"]
+
+[ext_resource type="Script" uid="uid://bn6xebe1w255b" path="res://scripts/buildings/buildingData.gd" id="1_kq4j8"]
+[ext_resource type="PackedScene" uid="uid://cvcxgaqr7dsnq" path="res://scenes/buildings/TestBuilding.tscn" id="1_lvupp"]
+
+[resource]
+script = ExtResource("1_kq4j8")
+display_name = "Test"
+scene = ExtResource("1_lvupp")
+grid_size = Vector2i(1, 1)
+category = 0
+cost_gold = 10
+description = ""
+metadata/_custom_type_script = "uid://bn6xebe1w255b"

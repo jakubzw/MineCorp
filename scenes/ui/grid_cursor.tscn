@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://b8wb8l5s1m8kr"]
+
+[ext_resource type="Script" uid="uid://drh3goldmiddy" path="res://scripts/ui/grid_cursor.gd" id="1_gvgf0"]
+
+[node name="GridCursor" type="Node3D"]
+script = ExtResource("1_gvgf0")
+
+[node name="GhostRoot" type="Node3D" parent="."]
+
+[node name="LocalGridMesh" type="MeshInstance3D" parent="."]
