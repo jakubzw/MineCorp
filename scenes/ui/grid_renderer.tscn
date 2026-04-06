@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://2yu1wv8dr5fb"]
+
+[ext_resource type="Script" uid="uid://dk4845al7kos2" path="res://scripts/ui/grid_renderer.gd" id="1_diptf"]
+
+[node name="GridRenderer" type="Node3D"]
+script = ExtResource("1_diptf")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]

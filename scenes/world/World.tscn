@@ -1,0 +1,38 @@
+[gd_scene load_steps=8 format=3 uid="uid://k1mrv64u5tku"]
+
+[ext_resource type="Shape3D" uid="uid://jcqti4xf5bkg" path="res://resources/terrain.tres" id="1_1oml7"]
+[ext_resource type="PackedScene" uid="uid://2yu1wv8dr5fb" path="res://scenes/ui/grid_renderer.tscn" id="2_6eebf"]
+[ext_resource type="PackedScene" uid="uid://cvmvrjwpfrxbx" path="res://scenes/camera/camera_rig.tscn" id="3_6eebf"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_1oml7"]
+size = Vector2(200, 200)
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1oml7"]
+
+[sub_resource type="Sky" id="Sky_6eebf"]
+sky_material = SubResource("ProceduralSkyMaterial_1oml7")
+
+[sub_resource type="Environment" id="Environment_6eebf"]
+background_mode = 2
+sky = SubResource("Sky_6eebf")
+
+[node name="World" type="Node3D"]
+
+[node name="GridRenderer" parent="." instance=ExtResource("2_6eebf")]
+
+[node name="Ground" type="MeshInstance3D" parent="."]
+mesh = SubResource("PlaneMesh_1oml7")
+
+[node name="Terrain" type="StaticBody3D" parent="Ground"]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Ground/Terrain"]
+shape = ExtResource("1_1oml7")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.707107, 0.707107, 0, -0.707107, 0.707107, 0, 0, 0)
+shadow_enabled = true
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_6eebf")
+
+[node name="CameraRig" parent="." instance=ExtResource("3_6eebf")]

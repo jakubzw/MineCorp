@@ -1,0 +1,13 @@
+[gd_scene load_steps=4 format=3 uid="uid://bujcaxs8w2yip"]
+
+[ext_resource type="PackedScene" uid="uid://b8wb8l5s1m8kr" path="res://scenes/ui/grid_cursor.tscn" id="1_u1xfj"]
+[ext_resource type="PackedScene" uid="uid://k1mrv64u5tku" path="res://scenes/world/World.tscn" id="2_q24mn"]
+[ext_resource type="PackedScene" uid="uid://dlsf38row0b7j" path="res://scenes/ui/HUD.tscn" id="3_gyg6b"]
+
+[node name="Main" type="Node3D"]
+
+[node name="GridCursor" parent="." instance=ExtResource("1_u1xfj")]
+
+[node name="World" parent="." instance=ExtResource("2_q24mn")]
+
+[node name="Hud" parent="." instance=ExtResource("3_gyg6b")]
