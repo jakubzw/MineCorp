@@ -10,7 +10,7 @@ extends CanvasLayer
 #          └── BuildMenu (Panel) ← build_menu.gd
 # ──────────────────────────────────────────
 
-@onready var _build_menu = $MarginContainer/BottomBar/BuildMenu
+@onready var _build_menu = $MarginContainer/VBoxContainer/BottomBar/BuildMenu
 
 
 func _ready() -> void:
