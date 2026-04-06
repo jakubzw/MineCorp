@@ -57,15 +57,16 @@ var _last_mouse_pos: Vector2        # Poprzednia pozycja myszy
 
 func _ready() -> void:
 	_target_position = global_position
-	_target_yaw = _pivot.rotation_degrees.y
-
-	# Zawsze wymuszaj sensowny zoom startowy
+	_target_yaw = 0.0
 	_target_zoom = 30.0
-	_camera.position = Vector3(0, 0, _target_zoom)
-
-	# Zawsze wymuszaj sensowne nachylenie startowe
 	_target_pitch = -45.0
-	_arm.rotation_degrees.x = _target_pitch
+
+	# Wymuś pozycję i rotację startową natychmiast
+	_pivot.rotation_degrees.y = 0.0
+	_arm.rotation_degrees.x = -45.0
+	_camera.position = Vector3(0, 0, 30.0)
+	# Kamera musi patrzeć na pivot (origin Arm)
+	_camera.look_at(_arm.global_position, Vector3.UP)
 
 	_clamp_pitch()
 
@@ -170,9 +171,9 @@ func _apply_smoothing(delta: float) -> void:
 	)
 
 	# Zoom — przesunięcie kamery wzdłuż jej lokalnej osi Z
-	var current_zoom: float = -_camera.position.z
+	var current_zoom: float = _camera.position.z
 	var new_zoom: float = lerp(current_zoom, _target_zoom, clamp(zoom_smoothing * delta, 0.0, 1.0))
-	_camera.position.z = -new_zoom
+	_camera.position.z = new_zoom
 
 	# Obrót poziomy (yaw)
 	_pivot.rotation_degrees.y = lerp_angle(
@@ -187,7 +188,6 @@ func _apply_smoothing(delta: float) -> void:
 		_target_pitch,
 		clamp(rotation_smoothing * delta, 0.0, 1.0)
 	)
-
 
 # ──────────────────────────────────────────
 #  Helpery
