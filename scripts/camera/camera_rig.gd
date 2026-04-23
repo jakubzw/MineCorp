@@ -34,25 +34,28 @@ extends Node3D
 ## Maksymalny kąt nachylenia kamery (stopnie)
 @export var pitch_max: float = 75.0
 
+## Czułość przeciągania MMB
+@export var pan_sensitivity: float = 0.03
+
 ## Granice mapy — kamera nie wyjdzie poza ten prostokąt
 @export var map_bounds: Rect2 = Rect2(-100, -100, 200, 200)
 ## Czy stosować granice mapy
 @export var use_map_bounds: bool = true
 
 # --- Węzły wewnętrzne ---
-@onready var _pivot: Node3D = $Pivot          # Obrót poziomy (yaw)
-@onready var _arm: Node3D = $Pivot/Arm        # Obrót pionowy (pitch)
+@onready var _pivot: Node3D = $Pivot
+@onready var _arm: Node3D = $Pivot/Arm
 @onready var _camera: Camera3D = $Pivot/Arm/Camera3D
 
 # --- Stan wewnętrzny ---
-var _target_position: Vector3       # Cel ruchu (wygładzony)
-var _target_zoom: float             # Cel zoomu
-var _target_yaw: float              # Cel obrotu poziomego
-var _target_pitch: float            # Cel nachylenia
+var _target_position: Vector3
+var _target_zoom: float
+var _target_yaw: float
+var _target_pitch: float
 
-var _is_rotating: bool = false      # Czy RMB wciśnięty
-var _is_panning: bool = false       # Czy MMB wciśnięty
-var _last_mouse_pos: Vector2        # Poprzednia pozycja myszy
+var _is_rotating: bool = false
+var _is_panning: bool = false
+var _last_mouse_pos: Vector2
 
 
 func _ready() -> void:
@@ -61,18 +64,14 @@ func _ready() -> void:
 	_target_zoom = 30.0
 	_target_pitch = -45.0
 
-	# Wymuś pozycję i rotację startową natychmiast
 	_pivot.rotation_degrees.y = 0.0
 	_arm.rotation_degrees.x = -45.0
 	_camera.position = Vector3(0, 0, 30.0)
-	# Kamera musi patrzeć na pivot (origin Arm)
-	_camera.look_at(_arm.global_position, Vector3.UP)
 
 	_clamp_pitch()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	# ── Zoom (scroll wheel) ──
 	if event is InputEventMouseButton:
 		if event.button_index == MOUSE_BUTTON_WHEEL_UP and event.pressed:
 			_target_zoom -= zoom_speed
@@ -80,17 +79,14 @@ func _unhandled_input(event: InputEvent) -> void:
 			_target_zoom += zoom_speed
 		_target_zoom = clamp(_target_zoom, zoom_min, zoom_max)
 
-		# ── Obrót (PPM) ──
 		if event.button_index == MOUSE_BUTTON_RIGHT:
 			_is_rotating = event.pressed
 			_last_mouse_pos = event.position
 
-		# ── Przeciąganie (MMB) ──
 		if event.button_index == MOUSE_BUTTON_MIDDLE:
 			_is_panning = event.pressed
 			_last_mouse_pos = event.position
 
-	# ── Ruch myszy ──
 	if event is InputEventMouseMotion:
 		if _is_rotating:
 			_handle_rotation(event.relative)
@@ -104,15 +100,17 @@ func _process(delta: float) -> void:
 
 
 # ──────────────────────────────────────────
-#  Ruch klawiaturą (WASD / strzałki)
+#  Ruch klawiaturą — względem kierunku kamery
 # ──────────────────────────────────────────
 func _handle_keyboard_move(delta: float) -> void:
 	var direction := Vector3.ZERO
 
-	# Kierunek względem obrotu kamery (yaw)
-	var yaw_rad := deg_to_rad(_target_yaw)
-	var forward := Vector3(-sin(yaw_rad), 0, -cos(yaw_rad))
-	var right   := Vector3(cos(yaw_rad),  0, -sin(yaw_rad))
+	# Kierunki liczone na podstawie aktualnego obrotu kamery (yaw)
+	# Używamy rzeczywistego kąta pivotu żeby ruch był zawsze zgodny
+	# z tym co widzi gracz na ekranie
+	var yaw_rad := _pivot.rotation.y  # radiany, aktualny obrót (po wygładzeniu)
+	var forward := Vector3(-sin(yaw_rad), 0.0, -cos(yaw_rad))
+	var right   := Vector3( cos(yaw_rad), 0.0, -sin(yaw_rad))
 
 	if Input.is_action_pressed("move_forward"):
 		direction += forward
@@ -128,7 +126,7 @@ func _handle_keyboard_move(delta: float) -> void:
 
 	direction = direction.normalized()
 	var speed := move_speed
-	if Input.is_action_pressed("move_fast"):
+	if Input.is_action_pressed("move_fast "):
 		speed *= move_speed_fast_multiplier
 
 	_target_position += direction * speed * delta
@@ -146,17 +144,19 @@ func _handle_rotation(mouse_delta: Vector2) -> void:
 
 # ──────────────────────────────────────────
 #  Przeciąganie mapy (MMB)
+#  Skalowane względem zoomu żeby prędkość była
+#  podobna niezależnie od odległości kamery
 # ──────────────────────────────────────────
 func _handle_pan(mouse_delta: Vector2) -> void:
-	var yaw_rad := deg_to_rad(_target_yaw)
-	var right   := Vector3(cos(yaw_rad), 0, -sin(yaw_rad))
-	var forward := Vector3(-sin(yaw_rad), 0, -cos(yaw_rad))
+	var yaw_rad := _pivot.rotation.y
+	var right   := Vector3( cos(yaw_rad), 0.0, -sin(yaw_rad))
+	var forward := Vector3(-sin(yaw_rad), 0.0, -cos(yaw_rad))
 
-	# Skalowanie prędkości przeciągania względem zoomu
-	var pan_scale := _target_zoom * 0.001
+	# pan_sensitivity * zoom daje stałą prędkość niezależnie od odległości
+	var pan_scale := pan_sensitivity * (_target_zoom / 30.0)
 
-	_target_position -= right   * mouse_delta.x * pan_scale * 100.0
-	_target_position += forward * mouse_delta.y * pan_scale * 100.0
+	_target_position -= right   * mouse_delta.x * pan_scale
+	_target_position += forward * mouse_delta.y * pan_scale
 	_apply_map_bounds()
 
 
@@ -164,30 +164,28 @@ func _handle_pan(mouse_delta: Vector2) -> void:
 #  Wygładzanie (lerp)
 # ──────────────────────────────────────────
 func _apply_smoothing(delta: float) -> void:
-	# Pozycja
 	global_position = global_position.lerp(
 		_target_position,
 		clamp(move_smoothing * delta, 0.0, 1.0)
 	)
 
-	# Zoom — przesunięcie kamery wzdłuż jej lokalnej osi Z
+	# Zoom — position.z jest dodatnie (kamera za pivitem)
 	var current_zoom: float = _camera.position.z
 	var new_zoom: float = lerp(current_zoom, _target_zoom, clamp(zoom_smoothing * delta, 0.0, 1.0))
 	_camera.position.z = new_zoom
 
-	# Obrót poziomy (yaw)
-	_pivot.rotation_degrees.y = lerp_angle(
+	_pivot.rotation_degrees.y = lerp(
 		_pivot.rotation_degrees.y,
 		_target_yaw,
 		clamp(rotation_smoothing * delta, 0.0, 1.0)
 	)
 
-	# Nachylenie (pitch)
-	_arm.rotation_degrees.x = lerp_angle(
+	_arm.rotation_degrees.x = lerp(
 		_arm.rotation_degrees.x,
 		_target_pitch,
 		clamp(rotation_smoothing * delta, 0.0, 1.0)
 	)
+
 
 # ──────────────────────────────────────────
 #  Helpery
@@ -207,18 +205,13 @@ func _apply_map_bounds() -> void:
 #  API publiczne
 # ──────────────────────────────────────────
 
-## Teleportuje kamerę natychmiast do pozycji (bez wygładzania)
 func teleport_to(pos: Vector3) -> void:
 	_target_position = pos
 	global_position = pos
 
-
-## Ustawia docelową pozycję (z wygładzaniem)
 func move_to(pos: Vector3) -> void:
 	_target_position = pos
 	_apply_map_bounds()
 
-
-## Ustawia zoom natychmiast
 func set_zoom(value: float) -> void:
 	_target_zoom = clamp(value, zoom_min, zoom_max)
